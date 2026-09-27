@@ -7,13 +7,21 @@ import Navbar from "./components/Navbar";
 import CreatePost from "./pages/CreatePost";
 import BlogDetails from "./pages/BlogDetails";
 import Profile from "./pages/Profile";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <BrowserRouter>
       <Navbar />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="/login" element={<Login />} />
 
@@ -22,7 +30,6 @@ function App() {
         <Route path="/create-post" element={<CreatePost />} />
         <Route path="/post/:id" element={<BlogDetails />} />
         <Route path="/profile" element={<Profile />} />
-
       </Routes>
     </BrowserRouter>
   );

@@ -20,7 +20,7 @@ const router = express.Router();
 
 router.post("/", protect, upload.single("image"), createPost);
 
-router.get("/", getAllPosts);
+router.get("/", protect, getAllPosts);
 
 router.get("/search", searchPosts);
 

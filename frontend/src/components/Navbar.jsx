@@ -34,7 +34,7 @@ const Navbar = () => {
                 to="/create-post"
                 className="text-gray-600 hover:text-black"
               >
-                Create Post
+                Create Blog
               </Link>
 
               <button

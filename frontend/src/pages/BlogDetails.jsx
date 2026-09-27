@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 
+import { getCurrentUser } from "../services/authService.js";
 import {
   getSinglePost,
   toggleLike,
@@ -21,6 +22,7 @@ const BlogDetails = () => {
   const { id } = useParams();
 
   const [post, setPost] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -82,8 +84,8 @@ const BlogDetails = () => {
           editData.tags
             .split(",")
             .map((tag) => tag.trim())
-            .filter((tag) => tag !== "")
-        )
+            .filter((tag) => tag !== ""),
+        ),
       );
 
       if (editData.image instanceof File) {
@@ -111,10 +113,7 @@ const BlogDetails = () => {
     try {
       const data = await addComment(id, commentText);
 
-      setComments((prevComments) => [
-        ...prevComments,
-        data.comment,
-      ]);
+      setComments((prevComments) => [...prevComments, data.comment]);
 
       setCommentText("");
     } catch (error) {
@@ -129,9 +128,7 @@ const BlogDetails = () => {
       await deleteComment(commentId);
 
       setComments((prevComments) =>
-        prevComments.filter(
-          (comment) => comment._id !== commentId
-        )
+        prevComments.filter((comment) => comment._id !== commentId),
       );
     } catch (error) {
       setError(error.message);
@@ -158,6 +155,11 @@ const BlogDetails = () => {
         console.log("Post:", data);
 
         setPost(data.post);
+        const userData = await getCurrentUser();
+        setCurrentUser(userData.user);
+
+        console.log("Current User:", userData.user);
+        console.log("Post Author:", data.post.author);
 
         const commentData = await getComments(id);
         console.log("Comments:", commentData);
@@ -203,12 +205,13 @@ const BlogDetails = () => {
     );
   }
 
+  const isOwner = currentUser?._id === post.author?._id;
+
   // ---------------- PAGE ----------------
 
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-5xl mx-auto px-6 py-10">
-
         {/* BACK TO HOME */}
 
         <Link
@@ -218,22 +221,21 @@ const BlogDetails = () => {
           ← Back to Home
         </Link>
 
-       {/* FEATURED IMAGE */}
+        {/* FEATURED IMAGE */}
 
-{post.image && (
-  <div className="mt-6 w-full h-[420px] rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center">
-    <img
-      src={`${API_URL}${post.image}`}
-      alt={post.title}
-      className="max-w-full max-h-full object-contain"
-    />
-  </div>
-)}
+        {post.image && (
+          <div className="mt-6 w-full h-[420px] rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center">
+            <img
+              src={`${API_URL}${post.image}`}
+              alt={post.title}
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+        )}
 
         {/* POST HEADER */}
 
         <div className="mt-8">
-
           <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
             {post.category}
           </p>
@@ -243,7 +245,6 @@ const BlogDetails = () => {
           </h1>
 
           <div className="flex flex-wrap items-center gap-4 mt-5 text-sm text-gray-500">
-
             <span>
               By{" "}
               <span className="font-medium text-gray-800">
@@ -253,17 +254,13 @@ const BlogDetails = () => {
 
             <span>•</span>
 
-            <span>
-              ❤️ {post.likes?.length || 0} likes
-            </span>
-
+            <span>❤️ {post.likes?.length || 0} likes</span>
           </div>
 
           {/* ACTION BUTTONS */}
 
           {!isEditing && (
             <div className="flex flex-wrap gap-3 mt-6">
-
               <button
                 onClick={handleLike}
                 className="border border-gray-300 bg-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-100 transition"
@@ -271,23 +268,25 @@ const BlogDetails = () => {
                 ❤️ Like
               </button>
 
-              <button
-                onClick={handleEditClick}
-                className="border border-gray-300 bg-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-100 transition"
-              >
-                Edit Post
-              </button>
+              {isOwner && (
+                <>
+                  <button
+                    onClick={handleEditClick}
+                    className="border border-gray-300 bg-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-100 transition"
+                  >
+                    Edit Post
+                  </button>
 
-              <button
-                onClick={handleDeletePost}
-                className="border border-red-200 bg-white text-red-500 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-red-50 transition"
-              >
-                Delete Post
-              </button>
-
+                  <button
+                    onClick={handleDeletePost}
+                    className="border border-red-200 bg-white text-red-500 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-red-50 transition"
+                  >
+                    Delete Post
+                  </button>
+                </>
+              )}
             </div>
           )}
-
         </div>
 
         {/* ================= EDIT FORM ================= */}
@@ -297,13 +296,10 @@ const BlogDetails = () => {
             onSubmit={handleUpdatePost}
             className="mt-8 bg-white border border-gray-200 rounded-2xl p-6 space-y-5"
           >
-
             {/* TITLE */}
 
             <div>
-              <label className="block font-medium mb-2">
-                Title
-              </label>
+              <label className="block font-medium mb-2">Title</label>
 
               <input
                 type="text"
@@ -322,9 +318,7 @@ const BlogDetails = () => {
             {/* CONTENT */}
 
             <div>
-              <label className="block font-medium mb-2">
-                Content
-              </label>
+              <label className="block font-medium mb-2">Content</label>
 
               <textarea
                 value={editData.content}
@@ -343,9 +337,7 @@ const BlogDetails = () => {
             {/* IMAGE */}
 
             <div>
-              <label className="block font-medium mb-2">
-                Change Image
-              </label>
+              <label className="block font-medium mb-2">Change Image</label>
 
               <input
                 type="file"
@@ -367,9 +359,7 @@ const BlogDetails = () => {
             {/* CATEGORY */}
 
             <div>
-              <label className="block font-medium mb-2">
-                Category
-              </label>
+              <label className="block font-medium mb-2">Category</label>
 
               <input
                 type="text"
@@ -388,9 +378,7 @@ const BlogDetails = () => {
             {/* TAGS */}
 
             <div>
-              <label className="block font-medium mb-2">
-                Tags
-              </label>
+              <label className="block font-medium mb-2">Tags</label>
 
               <input
                 type="text"
@@ -413,7 +401,6 @@ const BlogDetails = () => {
             {/* FORM BUTTONS */}
 
             <div className="flex gap-3">
-
               <button
                 type="submit"
                 className="bg-black text-white px-5 py-3 rounded-lg hover:bg-gray-800"
@@ -428,9 +415,7 @@ const BlogDetails = () => {
               >
                 Cancel
               </button>
-
             </div>
-
           </form>
         ) : (
           <>
@@ -444,7 +429,6 @@ const BlogDetails = () => {
 
             {post.tags?.length > 0 && (
               <div className="flex gap-2 flex-wrap mt-8">
-
                 {post.tags.map((tag, index) => (
                   <span
                     key={index}
@@ -453,7 +437,6 @@ const BlogDetails = () => {
                     #{tag}
                   </span>
                 ))}
-
               </div>
             )}
           </>
@@ -462,24 +445,15 @@ const BlogDetails = () => {
         {/* ================= COMMENTS ================= */}
 
         <div className="mt-12 border-t border-gray-200 pt-8">
-
-          <h2 className="text-2xl font-bold mb-6">
-            Comments
-          </h2>
+          <h2 className="text-2xl font-bold mb-6">Comments</h2>
 
           {/* COMMENT FORM */}
 
-          <form
-            onSubmit={handleAddComment}
-            className="flex gap-3 mb-8"
-          >
-
+          <form onSubmit={handleAddComment} className="flex gap-3 mb-8">
             <input
               type="text"
               value={commentText}
-              onChange={(e) =>
-                setCommentText(e.target.value)
-              }
+              onChange={(e) => setCommentText(e.target.value)}
               placeholder="Write a comment..."
               className="flex-1 border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black bg-white"
             />
@@ -490,7 +464,6 @@ const BlogDetails = () => {
             >
               Comment
             </button>
-
           </form>
 
           {/* COMMENTS LIST */}
@@ -501,46 +474,32 @@ const BlogDetails = () => {
             </p>
           ) : (
             <div className="space-y-4">
-
               {comments.map((comment) => (
                 <div
                   key={comment._id}
                   className="bg-white border border-gray-200 rounded-xl p-4"
                 >
-
                   <div className="flex justify-between items-start">
-
                     <div>
-
                       <p className="font-medium">
                         {comment.user?.name || "Unknown User"}
                       </p>
 
-                      <p className="text-gray-600 mt-1">
-                        {comment.content}
-                      </p>
-
+                      <p className="text-gray-600 mt-1">{comment.content}</p>
                     </div>
 
                     <button
-                      onClick={() =>
-                        handleDeleteComment(comment._id)
-                      }
+                      onClick={() => handleDeleteComment(comment._id)}
                       className="text-red-500 text-sm hover:underline"
                     >
                       Delete
                     </button>
-
                   </div>
-
                 </div>
               ))}
-
             </div>
           )}
-
         </div>
-
       </main>
     </div>
   );
