@@ -123,17 +123,25 @@ const BlogDetails = () => {
 
   // ---------------- DELETE COMMENT ----------------
 
-  const handleDeleteComment = async (commentId) => {
-    try {
-      await deleteComment(commentId);
+ const handleDeleteComment = async (commentId) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this message?"
+  );
 
-      setComments((prevComments) =>
-        prevComments.filter((comment) => comment._id !== commentId),
-      );
-    } catch (error) {
-      setError(error.message);
-    }
-  };
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await deleteComment(commentId);
+
+    setComments((prevComments) =>
+      prevComments.filter((comment) => comment._id !== commentId)
+    );
+  } catch (error) {
+    setError(error.message)
+  }
+};
 
   // ---------------- DELETE POST ----------------
 
