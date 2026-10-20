@@ -14,7 +14,9 @@ import {
   deleteComment,
 } from "../services/commentService.js";
 
-const API_URL = "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "")
+  : "http://localhost:8000";
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -281,15 +283,24 @@ const BlogDetails = () => {
           </div>
         )}
 
-        {post.image && (
-          <div className="mt-6 w-full h-[420px] rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center">
-            <img
-              src={`${API_URL}${post.image}`}
-              alt={post.title || "Blog post image"}
-              className="max-w-full max-h-full object-contain"
-            />
-          </div>
-        )}
+        
+{post.image && (
+  <div className="mt-6 w-full h-[420px] rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center">
+    <img
+      src={
+        post.image.startsWith("http")
+          ? post.image.replace(
+              /^http:\/\/localhost:8000/,
+              API_URL
+            )
+          : `${API_URL}${post.image.startsWith("/") ? "" : "/"}${post.image}`
+      }
+      alt={post.title || "Blog post image"}
+      className="max-w-full max-h-full object-contain"
+    />
+  </div>
+)}
+
 
         <div className="mt-8">
           <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
